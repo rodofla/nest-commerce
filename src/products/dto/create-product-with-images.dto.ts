@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsIn,
@@ -17,6 +18,7 @@ export class CreateProductWithImagesDto {
   @IsNumber()
   @IsPositive()
   @IsOptional()
+  @Type(() => Number)
   price?: number;
 
   @IsString()

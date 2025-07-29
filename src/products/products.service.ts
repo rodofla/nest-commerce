@@ -1,28 +1,20 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateProductWithImagesDto } from './dto/create-product-with-images.dto';
 import { UpdateProductWithImagesDto } from './dto/update-product-with-images.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { DataSource, QueryFailedError, Repository } from 'typeorm';
-import { isPostgresError } from '../common/utils/postgres-error.util';
+import { DataSource, Repository } from 'typeorm';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { validate as IsUUID } from 'uuid';
 import { ProductImage } from './entities';
 import { ProductImageService } from './services/product-image.service';
 import { UploadProductImagesDto } from './dto/upload-product-images.dto';
+import { BaseService } from 'src/common/services/base.service';
 
 @Injectable()
-export class ProductsService {
-  private readonly logger = new Logger('ProductsService');
-
+export class ProductsService extends BaseService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
@@ -32,7 +24,9 @@ export class ProductsService {
 
     private readonly dataSource: DataSource,
     private readonly productImageService: ProductImageService,
-  ) {}
+  ) {
+    super('ProductsService');
+  }
 
   async create(createProductDto: CreateProductDto) {
     try {
@@ -58,7 +52,7 @@ export class ProductsService {
       // 2. Subir imágenes si las hay
       if (files && files.length > 0) {
         await this.productImageService.uploadImagesForProduct(
-          Number(product.id),
+          product.id,
           files,
           imageFolder,
         );
@@ -79,7 +73,7 @@ export class ProductsService {
     try {
       const uploadedImages =
         await this.productImageService.uploadImagesForProduct(
-          Number(productId),
+          productId,
           files,
           folder,
         );
@@ -132,9 +126,6 @@ export class ProductsService {
         url: image.url,
         originalName: image.originalName,
         format: image.format,
-        width: image.width,
-        height: image.height,
-        bytes: image.bytes,
       })),
     }));
   }
@@ -204,14 +195,14 @@ export class ProductsService {
         if (imageAction === 'replace') {
           // Reemplazar todas las imágenes existentes
           await this.productImageService.replaceProductImages(
-            Number(id),
+            id,
             files,
             imageFolder,
           );
         } else {
           // Agregar nuevas imágenes
           await this.productImageService.uploadImagesForProduct(
-            Number(id),
+            id,
             files,
             imageFolder,
           );
@@ -260,33 +251,5 @@ export class ProductsService {
     if (!product) throw new NotFoundException(`Product not found`);
 
     return product;
-  }
-
-  private handleDBExceptions(error: unknown): never {
-    // Verificar si es un error de PostgreSQL usando la utility function
-    if (isPostgresError(error)) {
-      const { code, detail } = error.driverError;
-
-      // Manejar violación de constraint único (duplicate key)
-      if (code === '23505') {
-        throw new BadRequestException(detail);
-      }
-
-      // Aquí se pueden agregar más códigos de error de PostgreSQL
-      // Por ejemplo:
-      // - 23502: violación de NOT NULL
-      // - 23503: violación de foreign key
-      // - 23514: violación de CHECK constraint
-    }
-
-    // Si es un QueryFailedError pero no tiene la estructura de PostgreSQL
-    if (error instanceof QueryFailedError) {
-      this.logger.error(`Database query failed: ${error.message}`);
-      throw new InternalServerErrorException('An unexpected error occurred');
-    }
-
-    // Para cualquier otro tipo de error
-    this.logger.error(`Unexpected error: ${String(error)}`);
-    throw new InternalServerErrorException('An unexpected error occurred');
   }
 }

@@ -24,7 +24,7 @@ export class ProductImageService {
   ) {}
 
   async uploadImagesForProduct(
-    productId: number,
+    productId: string,
     files: Express.Multer.File[],
     folder: string = 'products',
   ): Promise<ImageUploadResponse> {
@@ -133,7 +133,7 @@ export class ProductImageService {
   }
 
   async replaceProductImages(
-    productId: number,
+    productId: string,
     files: Express.Multer.File[],
     folder: string = 'products',
   ): Promise<ImageUploadResponse> {
