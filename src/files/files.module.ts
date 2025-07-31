@@ -5,9 +5,10 @@ import { FilesController } from './files.controller';
 import { CloudinaryUploadStrategy } from './strategies/cloudinary-upload.strategy';
 import { LocalUploadStrategy } from './strategies/local-upload.strategy';
 import { FileUploadFactory } from './factories/file-upload.factory';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, AuthModule],
   controllers: [FilesController],
   providers: [
     FilesService,

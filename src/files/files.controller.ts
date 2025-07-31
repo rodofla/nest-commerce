@@ -8,15 +8,22 @@ import {
   Post,
   UploadedFile,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { FilesService } from './files.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { RequirePermissions } from 'src/auth/decorators';
+import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
+import { CommonPermissions } from 'src/auth/interfaces/valid-roles';
 
 @Controller('files')
+@UseGuards(AuthGuard(), PermissionsGuard)
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
   @Post('product')
+  @RequirePermissions(CommonPermissions.FILE_CREATE)
   @UseInterceptors(FileInterceptor('file'))
   async uploadProductImage(
     @UploadedFile(
@@ -44,6 +51,7 @@ export class FilesController {
   }
 
   @Delete('product/:publicId')
+  @RequirePermissions(CommonPermissions.FILE_DELETE)
   async deleteProductImage(@Param('publicId') publicId: string) {
     await this.filesService.deleteProductImage(publicId);
     return {

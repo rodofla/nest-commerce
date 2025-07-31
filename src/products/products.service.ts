@@ -12,6 +12,7 @@ import { ProductImage } from './entities';
 import { ProductImageService } from './services/product-image.service';
 import { UploadProductImagesDto } from './dto/upload-product-images.dto';
 import { BaseService } from 'src/common/services/base.service';
+import { User } from 'src/auth/entities/user.entity';
 
 @Injectable()
 export class ProductsService extends BaseService {
@@ -28,9 +29,12 @@ export class ProductsService extends BaseService {
     super('ProductsService');
   }
 
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto, user: User) {
     try {
-      const product = this.productRepository.create(createProductDto);
+      const product = this.productRepository.create({
+        ...createProductDto,
+        user,
+      });
       await this.productRepository.save(product);
       return this.findOnePlain(product.id);
     } catch (error) {
@@ -40,13 +44,14 @@ export class ProductsService extends BaseService {
 
   async createWithImages(
     createProductDto: CreateProductWithImagesDto,
+    user: User,
     files?: Express.Multer.File[],
   ) {
     try {
       const { imageFolder = 'products', ...productData } = createProductDto;
 
       // 1. Crear producto
-      const product = this.productRepository.create(productData);
+      const product = this.productRepository.create({ ...productData, user });
       await this.productRepository.save(product);
 
       // 2. Subir imágenes si las hay

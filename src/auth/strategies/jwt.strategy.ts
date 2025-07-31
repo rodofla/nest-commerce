@@ -17,19 +17,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      // HACK: Esto es solo para salir del paso, refactorizar después, NO DEBO USAR non-null assertion AQUÍ
-      secretOrKey: configService.get<string>('JWT_SECRET')!,
+      secretOrKey: configService.get<string>('JWT_SECRET') ?? 'default-secret',
     });
   }
 
   async validate(payload: JwtPayload): Promise<User> {
-    const { email } = payload;
+    const { id } = payload;
 
-    const user = await this.userRepository.findOneBy({ email });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles', 'roles.permissions'],
+    });
 
     if (!user) throw new UnauthorizedException('Invalid token');
 
-    if (!user.IsActive) {
+    if (!user.isActive) {
       throw new UnauthorizedException(
         'User is inactive, please contact support',
       );
