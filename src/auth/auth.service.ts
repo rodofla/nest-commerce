@@ -115,31 +115,15 @@ export class AuthService extends BaseService {
     };
   }
 
-  async validateUser(id: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { id, isActive: true },
-      relations: ['roles', 'roles.permissions'],
+  checkAuthStatus(user: User): UserResponseDto {
+    const userResponse = plainToInstance(UserResponseDto, user, {
+      excludeExtraneousValues: true,
     });
 
-    if (!user) {
-      throw new UnauthorizedException('User not found or inactive');
-    }
-
-    return user;
-  }
-
-  async getUserPermissions(userId: string): Promise<string[]> {
-    return await this.userRoleService.getUserPermissions(userId);
-  }
-
-  async checkUserPermission(
-    userId: string,
-    permissionCode: string,
-  ): Promise<boolean> {
-    return await this.userRoleService.checkUserPermission(
-      userId,
-      permissionCode,
-    );
+    return {
+      ...userResponse,
+      token: this.getJwtToken({ id: user.id }),
+    };
   }
 
   private getJwtToken(payload: JwtPayload): string {

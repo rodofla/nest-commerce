@@ -1,7 +1,6 @@
 import {
   Controller,
   Post,
-  UseGuards,
   HttpCode,
   HttpStatus,
   BadRequestException,
@@ -9,10 +8,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuthGuard } from '@nestjs/passport';
 import { RbacSeederService } from '../services/rbac-seeder.service';
-import { RequirePermissions } from '../decorators';
-import { PermissionsGuard } from '../guards/permissions.guard';
+import { Protected } from '../decorators';
 import { Role, User } from '../entities';
 import { AuthService } from '../auth.service';
 
@@ -103,8 +100,7 @@ export class RbacSeederController {
   }
 
   @Post('seed-all')
-  @UseGuards(AuthGuard(), PermissionsGuard)
-  @RequirePermissions('SYSTEM_MANAGE')
+  @Protected('SYSTEM_MANAGE')
   @HttpCode(HttpStatus.OK)
   async seedAll() {
     // Solo permitir en desarrollo

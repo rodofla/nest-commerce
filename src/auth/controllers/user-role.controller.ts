@@ -12,7 +12,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserRoleService } from '../services/user-role.service';
 import { AssignRolesDto, RemoveRolesDto } from '../dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { RequirePermissions } from '../decorators';
+import { Protected } from '../decorators';
 import { PermissionsGuard } from '../guards/permissions.guard';
 
 @Controller('user-roles')
@@ -21,7 +21,7 @@ export class UserRoleController {
   constructor(private readonly userRoleService: UserRoleService) {}
 
   @Post(':userId/assign')
-  @RequirePermissions('USER_UPDATE')
+  @Protected('USER_UPDATE')
   assignRoles(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() assignRolesDto: AssignRolesDto,
@@ -33,7 +33,7 @@ export class UserRoleController {
   }
 
   @Post(':userId/remove')
-  @RequirePermissions('USER_UPDATE')
+  @Protected('USER_UPDATE')
   removeRoles(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() removeRolesDto: RemoveRolesDto,
@@ -45,7 +45,7 @@ export class UserRoleController {
   }
 
   @Post(':userId/replace')
-  @RequirePermissions('USER_UPDATE')
+  @Protected('USER_UPDATE')
   replaceRoles(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() assignRolesDto: AssignRolesDto,
@@ -57,7 +57,7 @@ export class UserRoleController {
   }
 
   @Get('role/:roleId/users')
-  @RequirePermissions('USER_READ')
+  @Protected('USER_READ')
   getUsersWithRole(
     @Param('roleId', ParseUUIDPipe) roleId: string,
     @Query() paginationDto: PaginationDto,
@@ -66,13 +66,13 @@ export class UserRoleController {
   }
 
   @Get(':userId/permissions')
-  @RequirePermissions('USER_READ')
+  @Protected('USER_READ')
   getUserPermissions(@Param('userId', ParseUUIDPipe) userId: string) {
     return this.userRoleService.getUserPermissions(userId);
   }
 
   @Get('permission/:permissionCode/users')
-  @RequirePermissions('USER_READ')
+  @Protected('USER_READ')
   getUsersByPermission(
     @Param('permissionCode') permissionCode: string,
     @Query() paginationDto: PaginationDto,
@@ -84,7 +84,7 @@ export class UserRoleController {
   }
 
   @Post(':userId/sync-default-roles')
-  @RequirePermissions('USER_UPDATE')
+  @Protected('USER_UPDATE')
   syncDefaultRoles(@Param('userId', ParseUUIDPipe) userId: string) {
     return this.userRoleService.syncUserDefaultRoles(userId);
   }

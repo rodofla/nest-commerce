@@ -14,10 +14,9 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
-  UseGuards,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from '@nestjs/passport';
+
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -25,8 +24,8 @@ import { CreateProductWithImagesDto } from './dto/create-product-with-images.dto
 import { UpdateProductWithImagesDto } from './dto/update-product-with-images.dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { UploadProductImagesDto } from './dto/upload-product-images.dto';
-import { GetUser, RequirePermissions } from 'src/auth/decorators';
-import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
+import { GetUser, Protected } from 'src/auth/decorators';
+
 import { User } from 'src/auth/entities/user.entity';
 import { CommonPermissions } from 'src/auth/interfaces/valid-roles';
 
@@ -47,15 +46,13 @@ export class ProductsController {
 
   // Protected endpoints (require authentication and permissions)
   @Post()
-  @RequirePermissions(CommonPermissions.PRODUCT_CREATE)
-  @UseGuards(AuthGuard(), PermissionsGuard)
+  @Protected(CommonPermissions.PRODUCT_CREATE)
   create(@Body() createProductDto: CreateProductDto, @GetUser() user: User) {
     return this.productsService.create(createProductDto, user);
   }
 
   @Post('with-images')
-  @RequirePermissions(CommonPermissions.PRODUCT_CREATE)
-  @UseGuards(AuthGuard(), PermissionsGuard)
+  @Protected(CommonPermissions.PRODUCT_CREATE)
   @UseInterceptors(FilesInterceptor('files', 10))
   async createWithImages(
     @Body() createProductDto: CreateProductWithImagesDto,
@@ -75,8 +72,7 @@ export class ProductsController {
   }
 
   @Post(':id/images')
-  @RequirePermissions(CommonPermissions.PRODUCT_UPDATE)
-  @UseGuards(AuthGuard(), PermissionsGuard)
+  @Protected(CommonPermissions.PRODUCT_UPDATE)
   @UseInterceptors(FilesInterceptor('files', 10)) // Máximo 10 imágenes
   async uploadImages(
     @Param('id', ParseUUIDPipe) productId: string,
@@ -104,15 +100,13 @@ export class ProductsController {
   }
 
   @Delete('images/:imageId')
-  @RequirePermissions(CommonPermissions.PRODUCT_DELETE)
-  @UseGuards(AuthGuard(), PermissionsGuard)
+  @Protected(CommonPermissions.PRODUCT_DELETE)
   async deleteImage(@Param('imageId', ParseIntPipe) imageId: number) {
     return this.productsService.deleteImage(imageId);
   }
 
   @Patch(':id')
-  @RequirePermissions(CommonPermissions.PRODUCT_UPDATE)
-  @UseGuards(AuthGuard(), PermissionsGuard)
+  @Protected(CommonPermissions.PRODUCT_UPDATE)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateProductDto: UpdateProductDto,
@@ -121,8 +115,7 @@ export class ProductsController {
   }
 
   @Patch(':id/with-images')
-  @RequirePermissions(CommonPermissions.PRODUCT_UPDATE)
-  @UseGuards(AuthGuard(), PermissionsGuard)
+  @Protected(CommonPermissions.PRODUCT_UPDATE)
   @UseInterceptors(FilesInterceptor('files', 10))
   async updateWithImages(
     @Param('id', ParseUUIDPipe) id: string,
@@ -142,8 +135,7 @@ export class ProductsController {
   }
 
   @Delete(':id')
-  @RequirePermissions(CommonPermissions.PRODUCT_DELETE)
-  @UseGuards(AuthGuard(), PermissionsGuard)
+  @Protected(CommonPermissions.PRODUCT_DELETE)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.productsService.remove(id);
   }
